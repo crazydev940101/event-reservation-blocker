@@ -111,34 +111,48 @@ class Event_Reservation_Blocker_Public {
 			wp_send_json_error(array('message' => 'Invalid nonce'));
 			return;
 		}
-
+	
 		// Get the current time in WordPress server timezone
-		$current_time = current_time('timestamp');  // Current time in MySQL format (YYYY-MM-DD HH:MM:SS)
-
+		$current_time = current_time('mysql');  // Get current time in WordPress server timezone (YYYY-MM-DD HH:MM:SS format)
+	
+		// Convert the current server time to Mountain Time (MT)
+		// Create a DateTime object from the current server time
+		$server_time = new DateTime($current_time, new DateTimeZone(wp_timezone_string()));
+		
+		// Convert server time to Mountain Time (America/Denver)
+		$server_time->setTimezone(new DateTimeZone('America/Denver'));
+		
+		// Get the current time in Mountain Time as a Unix timestamp
+		$mountain_time = $server_time->getTimestamp();
+	
 		// Retrieve all the events (assuming events are stored in 'erb_events')
 		$events = get_option( 'erb_events', array() );
-
+	
 		$matching_events = false;
-
+	
 		// Loop through the events and check if the current time is within the event's time range
 		foreach ( $events as $event ) {
 			$event_start = isset( $event['start'] ) ? $event['start'] : '';
 			$event_end = isset( $event['end'] ) ? $event['end'] : '';
-
-			// Convert the event start and end times to Unix timestamps
-			$event_start_timestamp = $event_start ? strtotime( $event_start ) : false;
-			$event_end_timestamp = $event_end ? strtotime( $event_end ) : false;
-
-			if ( $event_start_timestamp && $event_end_timestamp ) {
-				// Check if current time is between event start and end times
-				if ( $current_time >= $event_start_timestamp && $current_time <= $event_end_timestamp ) {
+	
+			// Convert the event start and end times to DateTime objects
+			$event_start_datetime = $event_start ? new DateTime($event_start, new DateTimeZone(wp_timezone_string())) : false;
+			$event_end_datetime = $event_end ? new DateTime($event_end, new DateTimeZone(wp_timezone_string())) : false;
+	
+			if ( $event_start_datetime && $event_end_datetime ) {
+				// Convert event start and end times to Unix timestamps
+				$event_start_timestamp = $event_start_datetime->getTimestamp();
+				$event_end_timestamp = $event_end_datetime->getTimestamp();
+	
+				// Check if the current Mountain Time is between event start and end times
+				if ( $mountain_time >= $event_start_timestamp && $mountain_time <= $event_end_timestamp ) {
 					$matching_events = true;
 					error_log('Matching event found!');  // Log for debugging purposes
 					break;
 				}
-        	}
+			}
 		}
-
+	
 		// Return success or failure based on the comparison
 		if ( $matching_events ) {
 			wp_send_json_success(array('message' => 'Event is active!'));
@@ -146,5 +160,5 @@ class Event_Reservation_Blocker_Public {
 			wp_send_json_error(array('message' => 'No active events at the moment.'));
 		}
 	}
-
+	
 }
