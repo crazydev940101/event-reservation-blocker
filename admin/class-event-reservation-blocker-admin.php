@@ -97,6 +97,68 @@ class Event_Reservation_Blocker_Admin {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/event-reservation-blocker-admin.js', array( 'jquery' ), $this->version, false );
+		
+		wp_localize_script( $this->plugin_name, 'erbDeleteEventNonce', array(
+			'nonce' => wp_create_nonce( 'erb_delete_event_nonce' )
+		) );
+
+	}
+
+	/**
+     * Register the administration menu for this plugin into the WordPress Dashboard menu.
+     *
+     * @since    1.0.0
+     */
+    public function erb_add_menu_page() {
+
+		/**
+		* Add hook for admin menu
+		*/
+
+        add_menu_page(
+            __('Event Reservation Blocker'),
+            __('Event Reservation Blocker'),
+            'manage_options',
+            $this->plugin_name,
+            array($this, 'erb_display_add_menu_page'),
+			'dashicons-warning',
+			6
+        );
+    }
+
+	public function erb_display_add_menu_page() {
+
+		/**
+		* Get admin page for Excel File
+		*/
+
+		include_once( 'partials/event-reservation-blocker-admin-display.php' );
+
+		erb_admin_page();
+
+    }
+
+	public function erb_function_event_submission() {
+
+		/**
+		* Create table
+		*/
+
+		include_once( 'partials/event-reservation-blocker-admin-display.php' );
+
+		erb_handle_event_submission();
+
+	}
+
+	public function erb_function_delete_event() {
+
+		/**
+		* Create table
+		*/
+
+		include_once( 'partials/event-reservation-blocker-admin-display.php' );
+
+		erb_delete_event();
 
 	}
 

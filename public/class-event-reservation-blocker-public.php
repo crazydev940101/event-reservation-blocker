@@ -97,7 +97,54 @@ class Event_Reservation_Blocker_Public {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/event-reservation-blocker-public.js', array( 'jquery' ), $this->version, false );
+		wp_localize_script( $this->plugin_name, 'erbDeleteEventNonce', array(
+			'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( 'erb_check_event_time_nonce' )
+		));
 
+	}
+
+	// Handle checking event time against the current time
+	function erb_check_event_time() {
+		// Verify nonce
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'erb_check_event_time_nonce' ) ) {
+			wp_send_json_error(array('message' => 'Invalid nonce'));
+			return;
+		}
+
+		// Get the current time in WordPress server timezone
+		$current_time = current_time('timestamp');  // Current time in MySQL format (YYYY-MM-DD HH:MM:SS)
+
+		// Retrieve all the events (assuming events are stored in 'erb_events')
+		$events = get_option( 'erb_events', array() );
+
+		$matching_events = false;
+
+		// Loop through the events and check if the current time is within the event's time range
+		foreach ( $events as $event ) {
+			$event_start = isset( $event['start'] ) ? $event['start'] : '';
+			$event_end = isset( $event['end'] ) ? $event['end'] : '';
+
+			// Convert the event start and end times to Unix timestamps
+			$event_start_timestamp = $event_start ? strtotime( $event_start ) : false;
+			$event_end_timestamp = $event_end ? strtotime( $event_end ) : false;
+
+			if ( $event_start_timestamp && $event_end_timestamp ) {
+				// Check if current time is between event start and end times
+				if ( $current_time >= $event_start_timestamp && $current_time <= $event_end_timestamp ) {
+					$matching_events = true;
+					error_log('Matching event found!');  // Log for debugging purposes
+					break;
+				}
+        	}
+		}
+
+		// Return success or failure based on the comparison
+		if ( $matching_events ) {
+			wp_send_json_success(array('message' => 'Event is active!'));
+		} else {
+			wp_send_json_error(array('message' => 'No active events at the moment.'));
+		}
 	}
 
 }

@@ -29,4 +29,29 @@
 	 * practising this, we should strive to set a better example in our own work.
 	 */
 
+	jQuery(document).ready(function($){
+		// Handle delete event button click
+		$('.delete-event').on('click', function() {
+			var eventIndex = $(this).data('index');
+	
+			var data = {
+				action: 'erb_function_delete_event',
+				event_index: eventIndex,
+				nonce: erbDeleteEventNonce.nonce
+			};
+
+			// Send Ajax request to delete event
+			$.post(ajaxurl, data, function(response) {
+				if (response.success) {
+					console.log('Event deleted successfully!');
+					location.reload();
+				} else {
+					console.log('Failed to delete event.');
+				}
+			}).fail(function(xhr, status, error) {
+				console.log('Ajax Request Failed', error); // Log any Ajax errors
+			});
+		});
+	});
+	
 })( jQuery );

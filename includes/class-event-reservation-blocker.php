@@ -153,10 +153,13 @@ class Event_Reservation_Blocker {
 	private function define_admin_hooks() {
 
 		$plugin_admin = new Event_Reservation_Blocker_Admin( $this->get_plugin_name(), $this->get_version() );
-
+		
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
-
+		$this->loader->add_action( 'admin_menu', $plugin_admin, 'erb_add_menu_page', 10 );
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'erb_function_event_submission', 10 );
+		$this->loader->add_action( 'wp_ajax_erb_function_delete_event', $plugin_admin, 'erb_function_delete_event', 10 );
+		
 	}
 
 	/**
@@ -172,6 +175,8 @@ class Event_Reservation_Blocker {
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
+		$this->loader->add_action( 'wp_ajax_nopriv_erb_check_event_time', $plugin_public, 'erb_check_event_time', 10 );
+		$this->loader->add_action( 'wp_ajax_erb_check_event_time', $plugin_public, 'erb_check_event_time', 10 );
 
 	}
 
