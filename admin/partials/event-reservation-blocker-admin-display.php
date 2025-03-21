@@ -14,6 +14,9 @@
 
 
 function erb_admin_page() {
+    // Call the cleanup function when the admin page loads
+    erb_cleanup_expired_events();
+
     ?>
     <div class="wrap event-reservation-blocker">
         <h1>Event Reservation Blocker</h1>
@@ -101,6 +104,46 @@ function erb_delete_event() {
         wp_send_json_error();
     }
 }
+
+// Function to clean up events that have passed
+function erb_cleanup_expired_events() {
+    $events = get_option( 'erb_events', array() );
+
+    // Get the current time in WordPress server timezone
+    $current_time = current_time('mysql');  // Get current time in WordPress server timezone (YYYY-MM-DD HH:MM:SS format)
+    
+    // Create a DateTime object from the current server time
+    $server_time = new DateTime($current_time, new DateTimeZone(wp_timezone_string()));
+
+    // Convert server time to Mountain Time (America/Denver)
+    $server_time->setTimezone(new DateTimeZone('America/Denver'));
+
+    // Get the current time in Mountain Time as a Unix timestamp
+	$mountain_time = $server_time->getTimestamp();
+
+    // Loop through the events and check if the end time has passed
+    foreach ( $events as $index => $event ) {
+        $event_end = isset( $event['end'] ) ? $event['end'] : '';
+
+        // Convert the event start and end times to DateTime objects
+        $event_end_datetime = $event_end ? new DateTime($event_end, new DateTimeZone(wp_timezone_string())) : false;
+
+        if ( $event_end_datetime ) {
+            // Convert the event end time to DateTime
+            $event_end_timestamp = $event_end_datetime->getTimestamp();
+
+            // Check if the current time is past the event's end time
+            if ( $mountain_time > $event_end_timestamp ) {
+                // Event has passed, remove it
+                unset( $events[ $index ] );
+            }
+        }
+    }
+
+    // Save the updated list of events
+    update_option( 'erb_events', array_values($events) );
+}
+
 
 
 ?>
