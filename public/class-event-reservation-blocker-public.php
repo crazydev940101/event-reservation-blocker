@@ -129,33 +129,23 @@ class Event_Reservation_Blocker_Public {
 		$events = get_option( 'erb_events', array() );
 	
 		$matching_events = false;
+
+		$event_date = [];
 	
 		// Loop through the events and check if the current time is within the event's time range
 		foreach ( $events as $event ) {
 			$event_start = isset( $event['start'] ) ? $event['start'] : '';
 			$event_end = isset( $event['end'] ) ? $event['end'] : '';
 	
-			// Convert the event start and end times to DateTime objects
-			$event_start_datetime = $event_start ? new DateTime($event_start, new DateTimeZone(wp_timezone_string())) : false;
-			$event_end_datetime = $event_end ? new DateTime($event_end, new DateTimeZone(wp_timezone_string())) : false;
-	
-			if ( $event_start_datetime && $event_end_datetime ) {
-				// Convert event start and end times to Unix timestamps
-				$event_start_timestamp = $event_start_datetime->getTimestamp();
-				$event_end_timestamp = $event_end_datetime->getTimestamp();
-	
-				// Check if the current Mountain Time is between event start and end times
-				if ( $mountain_time >= $event_start_timestamp && $mountain_time <= $event_end_timestamp ) {
-					$matching_events = true;
-					error_log('Matching event found!');  // Log for debugging purposes
-					break;
-				}
-			}
+			// Use array_push() to add event start and end to the $event_date array
+			$event_date[] = [$event_start, $event_end];
+
+			$matching_events = true;
 		}
 	
 		// Return success or failure based on the comparison
 		if ( $matching_events ) {
-			wp_send_json_success(array('message' => 'Event is active!'));
+			wp_send_json_success(array('message' => 'Event is active!', 'event_date' => $event_date));
 		} else {
 			wp_send_json_error(array('message' => 'No active events at the moment.'));
 		}
