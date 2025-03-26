@@ -150,5 +150,46 @@ class Event_Reservation_Blocker_Public {
 			wp_send_json_error(array('message' => 'No active events at the moment.'));
 		}
 	}
+
+	// PHP for User Meta for Reservation Form
+	function set_default_cf7_values($tag, $function_name) {
+		$current_user = wp_get_current_user();
+	
+		if ($current_user->ID) {
+			// Check the name of the field to set default values
+			if ($tag['name'] === 'd-first-name') {
+				$tag['values'] = array(get_user_meta($current_user->ID, 'first_name', true));
+			}
+			if ($tag['name'] === 'd-last-name') {
+				$tag['values'] = array(get_user_meta($current_user->ID, 'last_name', true));
+			}
+			if ($tag['name'] === 'd-email') {
+				$tag['values'] = array($current_user->user_email);
+			}
+			if ($tag['name'] === 'd-phone') {
+				$tag['values'] = array(get_user_meta($current_user->ID, 'phone', true));
+			}
+			if ($tag['name'] === 'd-address1') {
+				$tag['values'] = array(get_user_meta($current_user->ID, 'address_1', true));
+			}
+			if ($tag['name'] === 'd-address2') {
+				$tag['values'] = array(get_user_meta($current_user->ID, 'address_2', true));
+			}
+			if ($tag['name'] === 'd-city') {
+				$tag['values'] = array(get_user_meta($current_user->ID, 'city', true));
+			}
+			if ($tag['name'] === 'd-zip') {
+				$tag['values'] = array(get_user_meta($current_user->ID, 'postal_code', true));
+			}
+			if ($tag['name'] === 'd-state') {
+				$tag['values'] = array(get_user_meta($current_user->ID, 'state', true));
+			}
+			if ($tag['name'] === 'd-country') {
+				$tag['values'] = array(get_user_meta($current_user->ID, 'country', true));
+			}
+		}
+	
+		return $tag;
+	}
 	
 }

@@ -178,6 +178,8 @@ class Event_Reservation_Blocker {
 		$this->loader->add_action( 'wp_ajax_nopriv_erb_check_event_time', $plugin_public, 'erb_check_event_time', 10 );
 		$this->loader->add_action( 'wp_ajax_erb_check_event_time', $plugin_public, 'erb_check_event_time', 10 );
 
+		$this->loader->add_filter('wpcf7_form_tag', $plugin_public, 'set_default_cf7_values', 10, 2);
+
 	}
 
 	/**
